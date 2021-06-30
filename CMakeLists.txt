@@ -1,10 +1,6 @@
 cmake_minimum_required(VERSION 3.16)
 
-if (DEFINED ENV{TRAVIS_BUILD_NUMBER})
-    project(appchat-client VERSION 0.1.$ENV{TRAVIS_BUILD_NUMBER})
-else ()
-    project(appchat-client VERSION 0.1.1)
-endif ()
+project(goodok-client VERSION 0.1.1)
 
 set(CONAN_DISABLE_CHECK_COMPILER TRUE)
 

@@ -1,20 +1,55 @@
-#image: registry.gitlab.com/goodok-chat/messaging-framework:latest
-image: registry.gitlab.com/goodok-chat/client/dekstop
+image: registry.gitlab.com/app-goodok/dekstop-client/common-env:0.1.1
+
 stages:
   - build
+#  - deploy
+
 variables:
-  CONAN_SYSREQUIRES_MODE: enabled
-Build:
+  CXX_COMPILER: "/usr/bin/g++-10"
+  DEBUG_DIR: "cmake-build-debug"
+  RELEASE_DIR: "cmake-build-release"
+  CONAN_DIR_DEBUG: "/builds/app-goodok/dekstop-client/cache-debug/.conan"
+  CONAN_DIR_RELEASE: "/builds/app-goodok/dekstop-client/cache-release/.conan"
+  CONAN_PROFILE_DEBUG: "goodok-profile-debug"
+  CONAN_PROFILE_RELEASE: "goodok-profile-release"
+  IMAGE_GATEWAY: "dekstop-client:0.1.1"
+
+Debug:
   stage: build
+  cache:
+    paths:
+      - $CONAN_DIR_DEBUG
   before_script:
-    - mkdir build && cd build
-    - conan profile new goodok-profile --detect
-    - conan profile update settings.compiler.version=9.3 goodok-profile
-    - conan profile update settings.compiler.libcxx=libstdc++11 goodok-profile
-#    - conan remote add bincrafters https://api.bintray.com/conan/bincrafters/public-conan
+    - export CONAN_USER_HOME=$CONAN_DIR_DEBUG
+    - conan profile new $CONAN_PROFILE_DEBUG --detect --force
+    - conan profile update settings.compiler.version=10 $CONAN_PROFILE_DEBUG
+    - conan profile update settings.compiler.libcxx=libstdc++11 $CONAN_PROFILE_DEBUG
+    - conan install -s build_type=Debug . --build=missing --profile $CONAN_PROFILE_DEBUG -e CXX=$CXX_COMPILER -if $DEBUG_DIR
   script:
-    - conan install .. --build missing --profile goodok-profile
-#    - conan install -s build_type=Release .. --build missing --profile goodok-profile
-    - cmake ..
-    - cmake --build .
+#    - conan build . --build-folder $DEBUG_DIR
+    - cmake -B $DEBUG_DIR -DCMAKE_BUILD_TYPE=Debug -DCMAKE_CXX_COMPILER=$CXX_COMPILER
+    - cmake --build $DEBUG_DIR -- -j 4
+
+Release:
+  stage: build
+  cache:
+    paths:
+      - $CONAN_DIR_RELEASE
+  before_script:
+    - export CONAN_USER_HOME=$CONAN_DIR_RELEASE
+    - conan profile new $CONAN_PROFILE_RELEASE --detect --force
+    - conan profile update settings.compiler.version=10 $CONAN_PROFILE_RELEASE
+    - conan profile update settings.compiler.libcxx=libstdc++11 $CONAN_PROFILE_RELEASE
+    - mkdir -p $RELEASE_DIR
+    - conan install -s build_type=Release . --build=missing --profile $CONAN_PROFILE_RELEASE -e CXX=$CXX_COMPILER -if $RELEASE_DIR
+  script:
+#    - conan build . --build-folder $RELEASE_DIR
+    - cmake -B $RELEASE_DIR -DCMAKE_BUILD_TYPE=Release -DCMAKE_CXX_COMPILER=$CXX_COMPILER
+    - cmake --build $RELEASE_DIR -- -j 4
+    - cmake --build $RELEASE_DIR --target package
+  artifacts:
+    paths:
+      - /builds/app-goodok/dekstop-client/$RELEASE_DIR/*.deb
+  only:
+    - master
 

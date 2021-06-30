@@ -5,10 +5,11 @@
 
 #include <QTextCursor>
 
-Control::Control(Storage::SqliteConfig config)
+Control::Control(Storage::SqliteConfig config, std::string const& host)
   : cacher(Storage::SqliteCache{config})
   , login_widget(std::make_unique<LoginWidget>())
   , main_window(std::make_unique<MainWindow>())
+  , ip(host)
 {
     qDebug() << "Ctor Control";
 
@@ -30,18 +31,18 @@ Control::Control(Storage::SqliteConfig config)
 void Control::run_app(int argc, char** argv) {
     qDebug() << "Control::run_app";
 
-    if (argc>1) {
-        ip = std::string(argv[1]);
-        if (argc>2) {
-            port = std::stoi(argv[2]);
-        }
-    }
+//    if (argc>1) {
+//        ip = std::string(argv[1]);
+//        if (argc>2) {
+//            port = std::stoi(argv[2]);
+//        }
+//    }
 
     login_widget->show();
 }
 
 void Control::connect_to_server(const std::string& login, const std::string& password, goodok::command::TypeCommand command) {
-    qDebug() <<  "connect_to_server()";
+    qDebug() <<  "connect_to_server(), ip=" << ip.c_str();
 
     boost::asio::io_service io_service;
     boost::asio::ip::tcp::resolver resolver(io_service);

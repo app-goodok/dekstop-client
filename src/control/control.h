@@ -20,7 +20,7 @@ class Control: public QObject
 {
     Q_OBJECT
 public:
-    Control(Storage::SqliteConfig config);
+    Control(Storage::SqliteConfig config, std::string const& host);
 
     void run_app(int argc, char** argv);
     /**
@@ -105,7 +105,7 @@ private:
     /**
      * @todo convert to 4 bytes
      */
-    std::string ip = "127.0.0.1";
+    const std::string ip;
     int32_t port = goodok::command::SERVER_DEFAULT_PORT;
 };
 
